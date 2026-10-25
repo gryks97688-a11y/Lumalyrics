@@ -1,0 +1,27 @@
+name: Build LumaLyrics for Apple Silicon
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+jobs:
+  mac:
+    runs-on: macos-15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Build unsigned Apple Silicon app
+        run: npm run dist:mac
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LumaLyrics-Apple-Silicon
+          path: |
+            dist/*.dmg
+            dist/*.zip
+          if-no-files-found: error

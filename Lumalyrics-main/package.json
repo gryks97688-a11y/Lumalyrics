@@ -1,0 +1,46 @@
+{
+  "name": "lumalyrics",
+  "version": "2.0.0",
+  "description": "Spotify companion with optional synced lyrics lookup, playback controls and ambient themes",
+  "main": "src/main.js",
+  "author": "LumaLyrics",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist:mac": "electron-builder --mac dmg zip --arm64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^35.7.5",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "app.lumalyrics.desktop",
+    "productName": "LumaLyrics",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.music",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "identity": null,
+      "hardenedRuntime": false
+    },
+    "dmg": {
+      "title": "LumaLyrics"
+    }
+  }
+}
