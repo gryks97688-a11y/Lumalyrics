@@ -1,7 +1,7 @@
 {
   "name": "lumalyrics",
-  "version": "6.2.0",
-  "description": "LumaLyrics 6.0 cinematic Spotify lyrics companion",
+  "version": "6.3.0",
+  "description": "LumaLyrics 6.3 split cinematic album scenes",
   "main": "src/main.js",
   "author": "LumaLyrics",
   "license": "MIT",

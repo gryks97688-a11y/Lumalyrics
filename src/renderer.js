@@ -49,6 +49,27 @@ function updateKinetic(ms){
 function time(ms){const s=Math.max(0,Math.floor(ms/1000));return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;}
 function position(){return demo?Math.min(demoTrack.durationMs,Date.now()-demoStarted):(progressMs+(playing?Date.now()-observedAt:0));}
 function updateLyrics(force=false){if(!entries.length)return;const ms=position()+offset*1000;let idx=-1;for(let i=0;i<entries.length;i++){if(entries[i].ms<=ms)idx=i;else break;}if(idx===active&&!force){updateKinetic(ms);return;}active=idx;const children=[...$('lyricList').children];children.forEach((el,i)=>{el.classList.toggle('active',i===idx);el.classList.toggle('near',Math.abs(i-idx)===1);});children.forEach((el,i)=>{if(i!==idx)el.querySelectorAll('.kinetic-word,.lyric-word').forEach(w=>{w.classList.toggle('revealed',i<idx);w.classList.remove('current');});});const target=children[Math.max(0,idx)]||children[0];if(target){const viewport=$('lyricList').parentElement;const shift=viewport.clientHeight*.43-(target.offsetTop+target.offsetHeight/2);$('lyricList').style.transform=`translateY(${shift}px)`;}updateKinetic(ms);}
+let sceneSlot=0;
+function transitionAlbumScene(url){
+  const next=document.getElementById(sceneSlot ? 'sceneA' : 'sceneB');
+  const old=document.getElementById(sceneSlot ? 'sceneB' : 'sceneA');
+  // Keep previous image visible until the new one has loaded.
+  const commit=()=>{
+    next.style.backgroundImage=url ? `url("${url}")` : 'none';
+    next.classList.add('scene-visible');old.classList.remove('scene-visible');
+    sceneSlot=1-sceneSlot;
+  };
+  if(!url){commit();return;}
+  const probe=new Image();probe.onload=commit;probe.onerror=()=>{console.warn('Scene artwork failed to load');};probe.src=url;
+}
+let parallaxX=0,parallaxY=0;
+window.addEventListener('pointermove',e=>{
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  parallaxX=(e.clientX/window.innerWidth-.5)*14;
+  parallaxY=(e.clientY/window.innerHeight-.5)*14;
+  document.documentElement.style.setProperty('--parallax-x',`${parallaxX}px`);
+  document.documentElement.style.setProperty('--parallax-y',`${parallaxY}px`);
+},{passive:true});
 let artworkGeneration=0;
 function rgb(r,g,b){return `rgb(${Math.round(r)} ${Math.round(g)} ${Math.round(b)})`;}
 function extractArtworkPalette(img){
@@ -78,6 +99,7 @@ function applyArtworkPalette(colors){
 function showTrack(t){
   if(!t)return;
   const generation=++artworkGeneration;
+  transitionAlbumScene(t.image || "");
   document.documentElement.style.setProperty('--album-art',t.image ? `url("${String(t.image).replace(/[^a-zA-Z0-9:/?&=._%\-]/g,'')}")` : 'none');
   $('track').textContent=t.name;$('artist').textContent=t.artists;$('duration').textContent=time(t.durationMs);durationMs=t.durationMs;
   const cover=$('cover');if(t.image){cover.src=t.image;cover.hidden=false;document.querySelector('.album-placeholder').hidden=true;
