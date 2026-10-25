@@ -30,3 +30,22 @@ main{height:100vh;box-sizing:border-box;display:grid;grid-template-columns:48% 5
 .lyric.kinetic-line .kinetic-word.current,.lyric .lyric-word.sung{opacity:1;filter:blur(0);transform:translateY(-3px) scale(1.08);color:var(--luma-peach);text-shadow:0 0 17px var(--luma-peach),0 0 42px var(--luma-violet)}
 .lyric:not(.active) .kinetic-word,.lyric:not(.active) .lyric-word{opacity:.25;filter:blur(1px);transform:none}
 @media(prefers-reduced-motion:reduce){.lyric .kinetic-word,.lyric .lyric-word{transition:none;transform:none!important}}
+
+/* 6.2: enforce cinematic composition over legacy stylesheet cascade */
+body.no-ambient .lightstrip{display:block!important}
+body.no-ambient .edge-halo{display:block!important}
+.lightstrip{position:fixed!important;inset:20px!important;z-index:8!important;opacity:max(.65,var(--glow,.8))!important;filter:drop-shadow(0 0 17px var(--luma-violet)) drop-shadow(0 0 28px var(--luma-peach))!important;animation:lighttravel 12s linear infinite!important}
+.edge-halo{position:fixed;pointer-events:none;z-index:1}
+main{max-width:none!important;height:100vh!important;grid-template-columns:48% 52%!important;padding:7vh 5.5vw 8vh!important}
+.art{align-items:flex-start!important;justify-content:flex-end!important;padding:0 3vw 2vh 0!important}
+.album{position:absolute!important;top:8%!important;left:6%!important;width:min(35vw,60vh)!important;height:min(35vw,60vh)!important;min-width:0!important;min-height:0!important;border-radius:45% 45% 8% 8%!important;transform:rotate(-2deg)!important}
+.song{text-align:left!important;margin-top:0!important;max-width:min(36vw,560px)!important}
+.lyrics-area{padding:0 2vw!important;justify-content:center!important}
+.lyric-viewport{height:72vh!important;max-height:none!important}
+.lyric-list{padding:25px 1vw!important}
+.lyric{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif!important;font-size:clamp(37px,4.5vw,88px)!important;font-weight:800!important;letter-spacing:-.055em!important;line-height:1.13!important;margin-bottom:38px!important}
+.lyric.kinetic-line .kinetic-word{opacity:0!important;filter:blur(12px)!important;transform:translateY(15px) scale(.82)!important}
+.lyric.active.kinetic-line .kinetic-word.revealed{opacity:.88!important;filter:blur(0)!important;transform:translateY(0) scale(1)!important}
+.lyric.active.kinetic-line .kinetic-word.current{opacity:1!important;color:var(--luma-peach)!important;filter:blur(0)!important;transform:translateY(-3px) scale(1.09)!important;text-shadow:0 0 20px var(--luma-peach),0 0 45px var(--luma-violet)!important}
+.lyric:not(.active) .kinetic-word{opacity:.25!important;filter:blur(1px)!important;transform:none!important}
+@media(max-width:700px){main{grid-template-columns:1fr!important;grid-template-rows:43% 57%!important;padding:8vh 8vw 6vh!important}.art{padding:0!important}.album{width:min(28vh,210px)!important;height:min(28vh,210px)!important;top:0!important;left:50%!important;transform:translateX(-50%)!important}.lyric{font-size:clamp(30px,8vw,50px)!important}.lyric-viewport{height:43vh!important}}

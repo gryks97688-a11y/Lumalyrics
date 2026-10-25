@@ -27,3 +27,7 @@ Alternatively push the folder contents (including `.github`) to a GitHub reposit
 The neon border, ambient lighting and highlights now use colours sampled from the current Spotify album artwork. If artwork cannot be sampled, a violet/amber fallback is used. Spotify album artwork is subject to image CORS availability.
 
 Lyrics appear progressively word-by-word. Enhanced LRC word timestamps provide precise sync; standard LRCLIB line timestamps provide **estimated** word timing, which can differ from the actual vocal timing. Import an enhanced LRC file for precise word-level timing.
+
+
+## 6.2 corrective rebuild
+The cinematic CSS is enforced over legacy style rules, word animation is always enabled, and the frame is no longer hidden by the ambient toggle. This is a source-only patch; rebuild the Electron application to see changes. Spotify lyric providers generally return line timestamps, so word timing is estimated unless enhanced LRC is imported. Album palette extraction may fall back to default colours if remote artwork blocks canvas access.
