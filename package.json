@@ -1,7 +1,7 @@
 {
   "name": "lumalyrics",
-  "version": "1.0.0",
-  "description": "Minimalist Spotify companion lyrics visualizer for macOS",
+  "version": "2.0.0",
+  "description": "Spotify companion with optional synced lyrics lookup, playback controls and ambient themes",
   "main": "src/main.js",
   "author": "LumaLyrics",
   "license": "MIT",
@@ -16,13 +16,31 @@
   "build": {
     "appId": "app.lumalyrics.desktop",
     "productName": "LumaLyrics",
-    "files": ["src/**/*", "package.json"],
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
     "mac": {
       "category": "public.app-category.music",
-      "target": [{"target":"dmg","arch":["arm64"]},{"target":"zip","arch":["arm64"]}],
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
       "identity": null,
       "hardenedRuntime": false
     },
-    "dmg": {"title": "LumaLyrics"}
+    "dmg": {
+      "title": "LumaLyrics"
+    }
   }
 }

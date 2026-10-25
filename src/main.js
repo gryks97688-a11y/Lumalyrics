@@ -6,7 +6,7 @@ const crypto = require('crypto');
 
 const PORT = 43821;
 const REDIRECT = `http://127.0.0.1:${PORT}/callback`;
-const SCOPES = 'user-read-currently-playing user-read-playback-state';
+const SCOPES = 'user-read-currently-playing user-read-playback-state user-modify-playback-state';
 let win, tokens = null, pending = null, callbackServer = null;
 const storePath = () => path.join(app.getPath('userData'), 'settings.json');
 function readSettings() { try { return JSON.parse(fs.readFileSync(storePath(), 'utf8')); } catch { return {}; } }
@@ -32,7 +32,8 @@ function makeWindow() {
 app.whenReady().then(() => { tokens = loadTokens(); makeWindow(); app.on('activate', () => {if (BrowserWindow.getAllWindows().length === 0) makeWindow();}); });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('before-quit', () => { if (callbackServer) callbackServer.close(); });
-ipcMain.handle('settings', () => ({clientId: readSettings().clientId || '', connected: !!tokens, redirect: REDIRECT}));
+ipcMain.handle('settings', () => ({clientId: readSettings().clientId || '', connected: !!tokens, redirect: REDIRECT, autoLyrics: readSettings().autoLyrics === true, theme: readSettings().theme || 'glass', ambient: readSettings().ambient !== false}));
+ipcMain.handle('preferences', (_e, input) => {const allowed=['glass','mono','aurora','warm'];const theme=allowed.includes(input?.theme)?input.theme:'glass';const prefs={theme,autoLyrics:input?.autoLyrics===true,ambient:input?.ambient!==false};saveSettings(prefs);return prefs;});
 ipcMain.handle('set-client-id', (_e, id) => { const value = String(id || '').trim(); if (value && !/^[a-zA-Z0-9]{20,80}$/.test(value)) throw new Error('Enter a valid Spotify Client ID.'); saveSettings({clientId:value}); return true; });
 ipcMain.handle('disconnect', () => {tokens=null; saveSettings({plainTokens:null, secureTokens:null}); sendAuth({connected:false}); return true;});
 ipcMain.handle('toggle-fullscreen', () => {win.setFullScreen(!win.isFullScreen()); return win.isFullScreen();});
@@ -102,4 +103,44 @@ ipcMain.handle('playback', async () => {
   const item=data.item;
   return {connected:true,playing:!!data.is_playing,progressMs:data.progress_ms||0,observedAt:Date.now(),
     track:item?{id:item.id,name:item.name,artists:(item.artists||[]).map(a=>a.name).join(', '),album:item.album?.name||'',image:item.album?.images?.[0]?.url||'',durationMs:item.duration_ms||0}:null};
+});
+
+// Lyrics are retrieved only from LRCLIB when the user opts in. LRCLIB is an
+// independent community service, not a Spotify API or licensed Spotify lyrics feed.
+const lyricCache = new Map();
+ipcMain.handle('lookup-lyrics', async (_event, track) => {
+  if (readSettings().autoLyrics !== true) return {status:'disabled'};
+  const title=String(track?.name||'').slice(0,160), artist=String(track?.artists||'').split(',')[0].trim().slice(0,160);
+  if (!title || !artist) return {status:'missing'};
+  const duration=Math.round(Number(track.durationMs||0)/1000);
+  const key=JSON.stringify([title,artist,duration]);
+  if (lyricCache.has(key)) return lyricCache.get(key);
+  const url=new URL('https://lrclib.net/api/search');url.searchParams.set('track_name',title);url.searchParams.set('artist_name',artist);
+  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),9000);
+  try {
+    const res=await fetch(url,{headers:{'User-Agent':'LumaLyrics/2.0 (personal desktop lyrics client)'},signal:controller.signal});
+    if (res.status===429) return {status:'rateLimited'};
+    if (!res.ok) return {status:'error',message:`Lyrics service returned ${res.status}`};
+    const results=await res.json();
+    if (!Array.isArray(results)) return {status:'missing'};
+    const normalize=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const match=results.find(x=>x.syncedLyrics && normalize(x.trackName)===normalize(title) && normalize(x.artistName).includes(normalize(artist)) && (!duration || Math.abs(Number(x.duration||0)-duration)<=5));
+    const result=match?{status:'found',text:match.syncedLyrics,source:'LRCLIB',name:match.trackName}:{status:'missing'};
+    lyricCache.set(key,result);if(lyricCache.size>80)lyricCache.delete(lyricCache.keys().next().value);
+    return result;
+  } catch(e){return {status:'error',message:'Lyrics service unavailable. Import an LRC file instead.'};}
+  finally{clearTimeout(timer);}
+});
+
+ipcMain.handle('control', async (_event, command) => {
+  if (!['play','pause','next','previous'].includes(command)) throw new Error('Unsupported playback action.');
+  const token=await accessToken();if(!token) throw new Error('Connect Spotify first.');
+  const routes={play:['PUT','play'],pause:['PUT','pause'],next:['POST','next'],previous:['POST','previous']};
+  const [method,route]=routes[command];
+  const res=await fetch(`https://api.spotify.com/v1/me/player/${route}`,{method,headers:{Authorization:`Bearer ${token}`}});
+  if(res.status===204)return {ok:true};
+  if(res.status===403)throw new Error('Spotify denied playback control. Premium and suitable API permissions may be required. Reconnect Spotify after upgrading.');
+  if(res.status===404)throw new Error('No active Spotify playback device. Start Spotify on your Mac first.');
+  if(res.status===429)throw new Error('Spotify rate limit reached. Try again later.');
+  throw new Error(`Spotify playback command failed (${res.status}).`);
 });
