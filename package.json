@@ -1,7 +1,7 @@
 {
   "name": "lumalyrics",
-  "version": "2.0.0",
-  "description": "Spotify companion with optional synced lyrics lookup, playback controls and ambient themes",
+  "version": "3.1.0",
+  "description": "Spotify companion: lyrics discovery, animated typography, living artwork and ambient perimeter",
   "main": "src/main.js",
   "author": "LumaLyrics",
   "license": "MIT",

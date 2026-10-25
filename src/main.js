@@ -32,8 +32,8 @@ function makeWindow() {
 app.whenReady().then(() => { tokens = loadTokens(); makeWindow(); app.on('activate', () => {if (BrowserWindow.getAllWindows().length === 0) makeWindow();}); });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('before-quit', () => { if (callbackServer) callbackServer.close(); });
-ipcMain.handle('settings', () => ({clientId: readSettings().clientId || '', connected: !!tokens, redirect: REDIRECT, autoLyrics: readSettings().autoLyrics === true, theme: readSettings().theme || 'glass', ambient: readSettings().ambient !== false}));
-ipcMain.handle('preferences', (_e, input) => {const allowed=['glass','mono','aurora','warm'];const theme=allowed.includes(input?.theme)?input.theme:'glass';const prefs={theme,autoLyrics:input?.autoLyrics===true,ambient:input?.ambient!==false};saveSettings(prefs);return prefs;});
+ipcMain.handle('settings', () => ({clientId: readSettings().clientId || '', connected: !!tokens, redirect: REDIRECT, autoLyrics: readSettings().autoLyrics !== false, theme: readSettings().theme || 'glass', ambient: readSettings().ambient !== false, font: readSettings().font || 'apple', glow: readSettings().glow ?? 75, floating: readSettings().floating === true, living: readSettings().living !== false}));
+ipcMain.handle('preferences', (_e, input) => {const allowed=['glass','mono','aurora','warm'];const theme=allowed.includes(input?.theme)?input.theme:'glass';const fonts=['apple','minimal','serif','cinema'];const prefs={theme,autoLyrics:input?.autoLyrics!==false,ambient:input?.ambient!==false,font:fonts.includes(input?.font)?input.font:'apple',glow:Math.min(100,Math.max(0,Number(input?.glow)||0)),living:input?.living!==false};saveSettings(prefs);return prefs;});
 ipcMain.handle('set-client-id', (_e, id) => { const value = String(id || '').trim(); if (value && !/^[a-zA-Z0-9]{20,80}$/.test(value)) throw new Error('Enter a valid Spotify Client ID.'); saveSettings({clientId:value}); return true; });
 ipcMain.handle('disconnect', () => {tokens=null; saveSettings({plainTokens:null, secureTokens:null}); sendAuth({connected:false}); return true;});
 ipcMain.handle('toggle-fullscreen', () => {win.setFullScreen(!win.isFullScreen()); return win.isFullScreen();});
@@ -105,42 +105,69 @@ ipcMain.handle('playback', async () => {
     track:item?{id:item.id,name:item.name,artists:(item.artists||[]).map(a=>a.name).join(', '),album:item.album?.name||'',image:item.album?.images?.[0]?.url||'',durationMs:item.duration_ms||0}:null};
 });
 
-// Lyrics are retrieved only from LRCLIB when the user opts in. LRCLIB is an
-// independent community service, not a Spotify API or licensed Spotify lyrics feed.
+// Independent LRCLIB lyric discovery. No Spotify audio is downloaded.
 const lyricCache = new Map();
-ipcMain.handle('lookup-lyrics', async (_event, track) => {
-  if (readSettings().autoLyrics !== true) return {status:'disabled'};
+function cleanTitle(t) {return String(t||'').replace(/\s*[\[(](?:remaster(?:ed)?|live|radio edit|deluxe|explicit|mono|stereo|feat\.?|ft\.?)[^\])]*[\])]/ig,'').trim();}
+function norm(t) {return String(t||'').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]/g,'');}
+async function lyricJSON(url) {
+  const controller=new AbortController(), timer=setTimeout(()=>controller.abort(),11000);
+  try {const r=await fetch(url,{headers:{'User-Agent':'LumaLyrics/3.1 (personal macOS lyric display; contact via GitHub)'},signal:controller.signal});
+    if(r.status===429)return {rateLimited:true};
+    if(r.status===404)return {missing:true};
+    if(!r.ok)throw new Error(`LRCLIB returned HTTP ${r.status}`);
+    return {data:await r.json()};
+  } finally {clearTimeout(timer);}
+}
+ipcMain.handle('lookup-lyrics',async (_event,track)=>{
+  if(readSettings().autoLyrics===false)return {status:'disabled'};
   const title=String(track?.name||'').slice(0,160), artist=String(track?.artists||'').split(',')[0].trim().slice(0,160);
-  if (!title || !artist) return {status:'missing'};
-  const duration=Math.round(Number(track.durationMs||0)/1000);
+  if(!title||!artist)return {status:'missing'};
+  const duration=Math.round(Number(track?.durationMs||0)/1000);
   const key=JSON.stringify([title,artist,duration]);
-  if (lyricCache.has(key)) return lyricCache.get(key);
-  const url=new URL('https://lrclib.net/api/search');url.searchParams.set('track_name',title);url.searchParams.set('artist_name',artist);
-  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),9000);
+  if(lyricCache.has(key))return lyricCache.get(key);
   try {
-    const res=await fetch(url,{headers:{'User-Agent':'LumaLyrics/2.0 (personal desktop lyrics client)'},signal:controller.signal});
-    if (res.status===429) return {status:'rateLimited'};
-    if (!res.ok) return {status:'error',message:`Lyrics service returned ${res.status}`};
-    const results=await res.json();
-    if (!Array.isArray(results)) return {status:'missing'};
-    const normalize=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-    const match=results.find(x=>x.syncedLyrics && normalize(x.trackName)===normalize(title) && normalize(x.artistName).includes(normalize(artist)) && (!duration || Math.abs(Number(x.duration||0)-duration)<=5));
-    const result=match?{status:'found',text:match.syncedLyrics,source:'LRCLIB',name:match.trackName}:{status:'missing'};
-    lyricCache.set(key,result);if(lyricCache.size>80)lyricCache.delete(lyricCache.keys().next().value);
+    let candidates=[];
+    const exact=new URL('https://lrclib.net/api/get');exact.searchParams.set('track_name',title);exact.searchParams.set('artist_name',artist);
+    if(track.album)exact.searchParams.set('album_name',String(track.album).slice(0,160));
+    if(duration>0)exact.searchParams.set('duration',String(duration));
+    const e=await lyricJSON(exact);
+    if(e.data && !Array.isArray(e.data))candidates.push(e.data);
+    const search=new URL('https://lrclib.net/api/search');search.searchParams.set('track_name',cleanTitle(title));search.searchParams.set('artist_name',artist);
+    const r=await lyricJSON(search);
+    if(Array.isArray(r.data))candidates.push(...r.data);
+    if(!candidates.length){const broad=new URL('https://lrclib.net/api/search');broad.searchParams.set('q',`${cleanTitle(title)} ${artist}`);const fallback=await lyricJSON(broad);if(Array.isArray(fallback.data))candidates.push(...fallback.data);}
+    const filtered=candidates.filter(x=>norm(x.trackName)===norm(title)||norm(x.trackName)===norm(cleanTitle(title)));
+    const pool=filtered.length?filtered:candidates.filter(x=>norm(x.trackName).includes(norm(cleanTitle(title)))&&norm(x.artistName).includes(norm(artist)));
+    const score=x=>(x.syncedLyrics?100:0)+(x.plainLyrics?10:0)+(norm(x.artistName)===norm(artist)?40:0)-(duration?Math.min(100,Math.abs(Number(x.duration||0)-duration)*4):0);
+    pool.sort((a,b)=>score(b)-score(a));
+    const match=pool.find(x=>x.syncedLyrics||x.plainLyrics);
+    const result=match?{status:'found',text:match.syncedLyrics||match.plainLyrics,synced:!!match.syncedLyrics,source:'LRCLIB',name:match.trackName}:{status:e.rateLimited||r.rateLimited?'rateLimited':'missing'};
+    lyricCache.set(key,result);if(lyricCache.size>100)lyricCache.delete(lyricCache.keys().next().value);
     return result;
-  } catch(e){return {status:'error',message:'Lyrics service unavailable. Import an LRC file instead.'};}
-  finally{clearTimeout(timer);}
+  }catch(err){return {status:'error',message:`Automatic lyrics unavailable: ${err.message}`};}
 });
 
-ipcMain.handle('control', async (_event, command) => {
-  if (!['play','pause','next','previous'].includes(command)) throw new Error('Unsupported playback action.');
-  const token=await accessToken();if(!token) throw new Error('Connect Spotify first.');
-  const routes={play:['PUT','play'],pause:['PUT','pause'],next:['POST','next'],previous:['POST','previous']};
-  const [method,route]=routes[command];
-  const res=await fetch(`https://api.spotify.com/v1/me/player/${route}`,{method,headers:{Authorization:`Bearer ${token}`}});
-  if(res.status===204)return {ok:true};
-  if(res.status===403)throw new Error('Spotify denied playback control. Premium and suitable API permissions may be required. Reconnect Spotify after upgrading.');
-  if(res.status===404)throw new Error('No active Spotify playback device. Start Spotify on your Mac first.');
+// Spotify controls use PKCE tokens. A 401 triggers a refresh and one retry.
+async function spotifyRequest(route, method='GET') {
+  let token=await accessToken();
+  if (!token) throw new Error('Connect Spotify in Settings.');
+  let res=await fetch(`https://api.spotify.com/v1/me/player${route}`,{method,headers:{Authorization:`Bearer ${token}`}});
+  if(res.status===401 && tokens?.refresh_token){
+    tokens.expires_at=0;token=await accessToken();
+    res=await fetch(`https://api.spotify.com/v1/me/player${route}`,{method,headers:{Authorization:`Bearer ${token}`}});
+  }
+  if(res.status===204||res.status===202||res.status===200)return {ok:true};
+  if(res.status===401)throw new Error('Spotify authorisation expired. Disconnect and reconnect in Settings.');
+  if(res.status===403)throw new Error('Spotify denied this command. Premium, permissions and a compatible playback device may be required.');
+  if(res.status===404)throw new Error('No active Spotify device. Start playing a track in Spotify first.');
   if(res.status===429)throw new Error('Spotify rate limit reached. Try again later.');
-  throw new Error(`Spotify playback command failed (${res.status}).`);
+  throw new Error(`Spotify command failed (${res.status}).`);
+}
+ipcMain.handle('control', async (_event, command, value) => {
+  const routes={play:['/play','PUT'],pause:['/pause','PUT'],next:['/next','POST'],previous:['/previous','POST']};
+  if(routes[command])return spotifyRequest(...routes[command]);
+  if(command==='volume')return spotifyRequest(`/volume?volume_percent=${Math.min(100,Math.max(0,Math.round(Number(value))))}`,'PUT');
+  if(command==='seek')return spotifyRequest(`/seek?position_ms=${Math.max(0,Math.round(Number(value)))}`,'PUT');
+  throw new Error('Unsupported playback action.');
 });
+ipcMain.handle('floating', (_e, enabled)=>{win.setAlwaysOnTop(!!enabled,'floating');saveSettings({floating:!!enabled});return !!enabled;});

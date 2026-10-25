@@ -17,3 +17,30 @@ body[data-theme="mono"] .brandmark{color:white}
 body[data-theme="aurora"] .ambient{opacity:.9;filter:hue-rotate(80deg) saturate(1.6) blur(70px);animation-duration:11s}
 body[data-theme="warm"] .ambient{filter:sepia(.7) hue-rotate(325deg) saturate(1.6) blur(55px);opacity:.8}
 @media(prefers-reduced-motion:reduce){.ambient{animation:none!important}.lyric,.lyric-list{transition:none!important}}
+
+/* LumaLyrics 3: living art, continuous ambient light, glowing perimeter */
+:root{--glow:.75}
+.lightstrip{position:fixed;inset:0;z-index:8;pointer-events:none;border:4px solid transparent;border-radius:8px;background:linear-gradient(115deg,#ffae72,#ac82ff,#6bbaff,#f7a86c,#ffae72) border-box;background-size:350% 350%;-webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:lighttravel 9s linear infinite;opacity:var(--glow);filter:drop-shadow(0 0 12px #b79dff)}
+@keyframes lighttravel{0%{background-position:0 50%}100%{background-position:350% 50%}}
+.ambient{animation:drift 9s ease-in-out infinite alternate;opacity:.85}
+.ambient:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 70% 70%,#7a78d044,transparent 55%);animation:orbitlight 13s linear infinite alternate}
+@keyframes orbitlight{to{transform:translate(-18%,-13%) scale(1.4);filter:hue-rotate(80deg)}}
+.album{position:relative;cursor:pointer;isolation:isolate}
+.album:after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:radial-gradient(circle at 35% 30%,#ffffff24,transparent 60%);opacity:0;transition:opacity .5s}
+.album.living:after{opacity:1;animation:artshine 7s ease-in-out infinite alternate}
+.album.living img{animation:artfloat 12s ease-in-out infinite alternate;transform-origin:50% 50%}
+.album.living{box-shadow:0 25px 85px #0009,0 0 45px var(--c1,#6e5990)}
+@keyframes artfloat{from{transform:scale(1.07) translate(-1%,-1%) rotate(-1deg)}to{transform:scale(1.14) translate(1%,1%) rotate(1deg)}}
+@keyframes artshine{to{background-position:100% 100%;opacity:.3}}
+.volume-controls{display:flex;align-items:center;gap:9px;margin-top:13px;color:#d1cbd9;font-size:11px}
+.volume-controls input{width:140px;accent-color:#c9a7ff}
+.volume-controls button{padding:6px 9px}
+.progress{cursor:pointer}
+body[data-font="minimal"] .lyric{font-family:"Helvetica Neue",sans-serif;font-weight:300;letter-spacing:-.03em}
+body[data-font="serif"] .lyric{font-family:Georgia,serif;font-weight:400;letter-spacing:-.03em}
+body[data-font="cinema"] .lyric{font-family:"Helvetica Neue",sans-serif;font-weight:350;letter-spacing:.08em;text-transform:uppercase;font-size:clamp(19px,2.5vw,35px)}
+body[data-font="apple"] .lyric{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;font-weight:650;letter-spacing:-.035em}
+.lyric-word{color:#aaa2b9;transition:color .16s,text-shadow .16s}
+.lyric-word.sung{color:#fff;text-shadow:0 0 15px #d9baff80}
+body.no-ambient .lightstrip{display:none}
+@media(prefers-reduced-motion:reduce){.lightstrip,.album.living img,.album.living:after,.ambient:after{animation:none!important}}
