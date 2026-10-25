@@ -1,7 +1,7 @@
 {
   "name": "lumalyrics",
-  "version": "4.0.0",
-  "description": "Cinematic Spotify companion with automatic lyrics, living artwork and ambient perimeter",
+  "version": "5.0.0",
+  "description": "Living-art cinematic Spotify companion with automatic lyrics, living artwork and ambient perimeter",
   "main": "src/main.js",
   "author": "LumaLyrics",
   "license": "MIT",

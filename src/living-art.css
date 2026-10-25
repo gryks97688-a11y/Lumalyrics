@@ -1,0 +1,43 @@
+/* LumaLyrics 5 - Living Art. Original app/Spotify IDs are unchanged. */
+:root { --album-glow: #e5a17e; --album-secondary: #9c7ab9; --album-art: none; }
+body { background:#050307; }
+.cover-backdrop { position:fixed; inset:-18%; z-index:-3; pointer-events:none; background-image:var(--album-art); background-size:cover; background-position:center; opacity:.40; filter:blur(68px) brightness(.42) saturate(1.55); transform:scale(1.14); animation:coverBreath 24s ease-in-out infinite alternate; transition:background-image 1s,opacity 1.4s; }
+.cover-backdrop::after { content:"";position:absolute;inset:0;background:linear-gradient(90deg,#06040966 0%,#07040ba8 52%,#050408db 100%); }
+@keyframes coverBreath { 0% {transform:scale(1.14) translate(-2%,-1%) rotate(-1deg)} 50% {transform:scale(1.23) translate(3%,2%) rotate(1.5deg)} 100% {transform:scale(1.17) translate(-1%,3%) rotate(-.5deg)} }
+.ambient { z-index:-2;opacity:.48!important;filter:blur(90px) saturate(1.1)!important;mix-blend-mode:screen; }
+.grain {z-index:-1;opacity:.38}
+.edge-halo { position:fixed;inset:0;z-index:6;pointer-events:none;box-shadow:inset 0 0 18px 5px #ffceab20,inset 0 0 64px 8px #bd82db20,inset 0 0 110px 16px #ec9b7920;animation:haloBreathe 8s ease-in-out infinite alternate; }
+@keyframes haloBreathe {from{opacity:.62}to{opacity:1}}
+.lightstrip {inset:12px;z-index:8;border:5px solid transparent;border-radius:34px;opacity:calc(var(--glow,.8) * .88);background:linear-gradient(115deg,#d7a3f1,#ffe1ba,#f2a77d,#886cc6,#d7a3f1) border-box;background-size:320% 320%;animation:lighttravel 17s linear infinite;filter:none;}
+.lightstrip::before {content:"";position:absolute;inset:-7px;border-radius:39px;box-shadow:0 0 23px 5px #dd98c050,inset 0 0 22px 7px #f6bd9b35;}
+header {background:transparent;padding:25px 48px;height:74px}
+.brand {opacity:.68;font-size:12px;letter-spacing:.14em}
+main {grid-template-columns:minmax(300px,47%) minmax(340px,53%);padding:84px clamp(45px,6vw,110px) 58px;gap:clamp(26px,5vw,100px)}
+.art {align-items:flex-start;padding:0 0 0 clamp(0px,2vw,35px);}
+.album {width:min(34vw,460px);height:min(34vw,460px);min-width:205px;min-height:205px;border-radius:15px;box-shadow:0 30px 100px #000b,0 0 75px 2px var(--album-glow);overflow:hidden;}
+.album.living img {animation:livingZoom 16s ease-in-out infinite alternate;}
+@keyframes livingZoom {0%{transform:scale(1.04) translate(-1%,0)}50%{transform:scale(1.11) translate(1.5%,-1%)}100%{transform:scale(1.06) translate(-.5%,1%)} }
+.album.living::after {background:linear-gradient(120deg,transparent 20%,#ffffff1d 48%,transparent 74%);background-size:260% 100%;}
+.song {text-align:left;margin-top:23px}.song h1 {font-size:clamp(18px,1.9vw,27px);font-weight:580}.song p{font-size:13px;color:#dfbdaf}
+.progress,.timing {width:min(34vw,460px);min-width:205px}.progress {height:3px;margin-top:20px;background:#fff3}.progress div{background:linear-gradient(90deg,#f9c99b,#edb8ff);box-shadow:0 0 12px #ffcaa3}
+.player-controls,.volume-controls {opacity:0;transition:opacity .3s}.art:hover .player-controls,.art:hover .volume-controls,.art:focus-within .player-controls,.art:focus-within .volume-controls{opacity:1}
+.lyrics-area{padding:0 2% 0 0;justify-content:center}.eyebrow{font-size:10px;letter-spacing:.3em;color:#c5a3d3;opacity:.7;margin:0 0 16px 4%}
+.lyric-viewport {height:min(65vh,650px);mask-image:linear-gradient(to bottom,transparent 1%,#000 19%,#000 79%,transparent 99%)}
+.lyric-list{padding:18px 4%}.lyric{font-size:clamp(26px,3.35vw,57px);font-weight:620;line-height:1.15;letter-spacing:-.045em;opacity:.13;filter:blur(2px);transform:translateY(9px) scale(.96);margin-bottom:20px;transition:opacity .6s,filter .6s,transform .6s}
+.lyric.active{opacity:1;filter:none;transform:translateY(0) scale(1);text-shadow:0 0 35px #e5a0a035}
+.lyric.near{opacity:.32;filter:blur(.5px)}
+.lyric-word {display:inline-block;transition:color .28s,text-shadow .28s,transform .32s,opacity .28s;}
+.lyric-word.sung {color:#ffcf9e;text-shadow:0 0 11px #ffb17b,0 0 32px #f7a77b9c;transform:scale(1.035)}
+/* With timed lines but no timed words, visually emphasize an estimated word. */
+.lyric.kinetic-line {max-width:650px;display:flex;flex-wrap:wrap;gap:.12em .24em;align-items:baseline}
+.lyric.kinetic-line .kinetic-word {color:#b79ac3;opacity:.76;transition:color .24s,opacity .24s,transform .24s,text-shadow .24s;display:inline-block}
+.lyric.kinetic-line .kinetic-word.past {color:#c7a6cf;opacity:.7}
+.lyric.kinetic-line .kinetic-word.current {color:#ffd0a4;opacity:1;transform:scale(1.10);text-shadow:0 0 10px #ffba83,0 0 34px #f0a479aa}
+.lyric.kinetic-line:not(.active) .kinetic-word{color:inherit;opacity:1;transform:none;text-shadow:none}
+.lyric.active .lyric-word:not(.sung){color:#bda4c6}
+.bottom-actions {opacity:0;bottom:6px}.lyrics-area:hover .bottom-actions,.bottom-actions:focus-within{opacity:.8}.lyrics-source{opacity:.15}
+body[data-font="serif"] .lyric{font-family:Georgia,serif;font-weight:400}body[data-font="minimal"] .lyric{font-weight:300}body[data-font="cinema"] .lyric{font-size:clamp(23px,2.9vw,45px);letter-spacing:.07em;text-transform:uppercase}
+body.no-ambient .cover-backdrop,body.no-ambient .edge-halo{display:none}
+@media(max-width:900px){main{grid-template-columns:42% 58%;padding:76px 36px 35px;gap:25px}.album{width:34vw;height:34vw}.lyric{font-size:clamp(25px,3.4vw,39px)}}
+@media(max-width:650px){main{grid-template-columns:1fr;grid-template-rows:42% 58%;padding:70px 32px 18px;gap:0}.art{align-items:center;padding:0}.album{width:min(30vh,220px);height:min(30vh,220px)}.song{text-align:center}.progress,.timing{width:65vw}.lyrics-area{padding:0}.lyric-viewport{height:45vh}.lyric{font-size:29px}.lightstrip{inset:8px;border-radius:23px}}
+@media(prefers-reduced-motion:reduce){.cover-backdrop,.edge-halo,.lightstrip,.album.living img{animation:none!important}}
