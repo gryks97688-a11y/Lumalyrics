@@ -1,0 +1,32 @@
+/* LumaLyrics 6.0 — cinematic reference-inspired stage */
+:root{--luma-violet:#b68be2;--luma-peach:#ffc08f}
+body{background:#090610;overflow:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 82% 55%,#d86d4a21,transparent 55%),radial-gradient(ellipse at 12% 60%,#8b53b526,transparent 48%);z-index:-1}
+.lightstrip{inset:20px;border:2px solid transparent;border-radius:46px;background:linear-gradient(110deg,#b989ff 0%,#f2a7b9 27%,#ffb478 62%,#e2a0ff 100%) border-box;box-shadow:0 0 13px #d29bff,0 0 32px #9c62d777,inset 0 0 16px #ffb38c88;animation:lighttravel 20s linear infinite;opacity:calc(var(--glow,.8) * 1)}
+.lightstrip::before{inset:-10px;border-radius:52px;box-shadow:0 0 30px 6px #ad70ed65,inset 0 0 30px 7px #ffb58e38}
+.edge-halo{inset:20px;border-radius:45px;box-shadow:inset 0 0 70px 15px #d681ae21,inset 0 0 125px 24px #ff9e7022}
+header{position:absolute;top:28px;left:46px;right:46px;z-index:9;opacity:0;transition:opacity .25s}body:hover header,header:focus-within{opacity:1}
+main{height:100vh;box-sizing:border-box;display:grid;grid-template-columns:48% 52%;gap:0;padding:8vh 5.3vw 7vh;align-items:stretch}
+.art{position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;padding:0 3vw 1.5vh 0;min-height:0}
+.album{position:absolute;top:7%;left:5%;width:min(33vw,58vh);height:min(33vw,58vh);min-width:0;min-height:0;border-radius:46% 46% 8% 8%;overflow:hidden;box-shadow:0 0 0 8px #09060a8c,0 0 0 11px #d49c7440,0 0 85px 10px var(--album-glow);transform:rotate(-2deg);opacity:.88}
+.album img{object-fit:cover;width:100%;height:100%}
+.song,.progress,.timing,.player-controls,.volume-controls,.control-message{position:relative;z-index:2}
+.song{margin-top:0;text-align:left;text-shadow:0 2px 15px #000}.song h1{font-size:clamp(19px,1.65vw,28px);font-weight:700;letter-spacing:-.04em}.song p{font-size:clamp(13px,1vw,17px);color:#eeb69d;margin-top:5px}
+.progress,.timing{width:min(32vw,530px);min-width:0}.progress{height:5px;border-radius:8px;margin-top:23px;background:#f6c1b42b}.progress div{background:linear-gradient(90deg,#ffd6a0,#ffb884);box-shadow:0 0 16px #ffab79}.timing{font-size:12px;color:#e3b7a9;margin-top:9px}
+.player-controls,.volume-controls{position:absolute;bottom:4px;right:12%;opacity:0}.volume-controls{bottom:45px}.art:hover .player-controls,.art:hover .volume-controls,.art:focus-within .player-controls,.art:focus-within .volume-controls{opacity:1}
+.lyrics-area{padding:0 2vw 0 3vw;display:flex;justify-content:center;min-height:0}.eyebrow{display:none}.lyric-viewport{height:70vh;max-height:750px;mask-image:linear-gradient(to bottom,transparent,#000 23%,#000 75%,transparent)}
+.lyric-list{padding:30px 1vw}.lyric{font-size:clamp(34px,4.3vw,82px);font-weight:750;line-height:1.13;letter-spacing:-.055em;margin-bottom:28px;opacity:.17;filter:blur(1.5px);color:#ac87c5;transition:opacity .5s,filter .5s,transform .5s}.lyric.active{color:#bfa0d4;text-shadow:0 0 25px #ac74c333}.lyric.near{opacity:.38}.lyric.kinetic-line .kinetic-word{color:#b39ac8}.lyric.kinetic-line .kinetic-word.current,.lyric-word.sung{color:#ffc18e;opacity:1;text-shadow:0 0 15px #ffad77,0 0 44px #f98d58c4}.lyric.kinetic-line .kinetic-word.current{transform:scale(1.06)}
+.bottom-actions{z-index:7}.lyrics-source{color:#e8c0d9}
+@media(max-width:800px){main{grid-template-columns:43% 57%;padding:10vh 5vw 7vh}.album{top:17%;width:35vw;height:35vw}.lyric{font-size:clamp(26px,4.4vw,46px)}.lightstrip{inset:12px;border-radius:28px}}
+@media(max-width:560px){main{grid-template-columns:1fr;grid-template-rows:43% 57%;padding:7vh 8vw 5vh}.art{padding:0 0 10px;justify-content:flex-end}.album{top:0;left:50%;transform:translateX(-50%);height:min(29vh,200px);width:min(29vh,200px)}.song{text-align:center;align-self:center}.progress,.timing{width:100%}.lyrics-area{padding:0}.lyric-viewport{height:43vh}.lyric{font-size:clamp(26px,8vw,44px);margin-bottom:16px}.lightstrip{inset:8px;border-radius:22px}header{top:14px;left:20px;right:20px}}
+@media(prefers-reduced-motion:reduce){.lightstrip,.edge-halo{animation:none!important}}
+
+/* 6.1: album-driven neon and progressive word reveal */
+.lightstrip{background:linear-gradient(115deg,var(--luma-violet),var(--luma-peach) 44%,var(--luma-violet) 78%,var(--luma-peach)) border-box;box-shadow:0 0 14px var(--luma-violet),0 0 36px var(--luma-peach),inset 0 0 17px var(--luma-violet);transition:box-shadow 1.5s ease,opacity .5s}
+.lightstrip::before{box-shadow:0 0 35px 6px var(--luma-violet),inset 0 0 28px 5px var(--luma-peach);opacity:.45}
+.edge-halo{box-shadow:inset 0 0 85px 15px var(--luma-violet),inset 0 0 145px 25px var(--luma-peach);opacity:.13;transition:box-shadow 1.5s ease}
+.lyric.kinetic-line .kinetic-word,.lyric .lyric-word{display:inline-block;margin-right:.22em;opacity:0;filter:blur(11px);transform:translateY(18px) scale(.84);transition:opacity .24s ease,filter .3s ease,transform .32s cubic-bezier(.2,1.4,.4,1),color .25s ease;text-shadow:none}
+.lyric.kinetic-line .kinetic-word.revealed,.lyric .lyric-word.revealed{opacity:.86;filter:blur(0);transform:translateY(0) scale(1);color:var(--luma-violet)}
+.lyric.kinetic-line .kinetic-word.current,.lyric .lyric-word.sung{opacity:1;filter:blur(0);transform:translateY(-3px) scale(1.08);color:var(--luma-peach);text-shadow:0 0 17px var(--luma-peach),0 0 42px var(--luma-violet)}
+.lyric:not(.active) .kinetic-word,.lyric:not(.active) .lyric-word{opacity:.25;filter:blur(1px);transform:none}
+@media(prefers-reduced-motion:reduce){.lyric .kinetic-word,.lyric .lyric-word{transition:none;transform:none!important}}
