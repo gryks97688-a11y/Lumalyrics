@@ -1,0 +1,28 @@
+{
+  "name": "lumalyrics",
+  "version": "1.0.0",
+  "description": "Minimalist Spotify companion lyrics visualizer for macOS",
+  "main": "src/main.js",
+  "author": "LumaLyrics",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist:mac": "electron-builder --mac dmg zip --arm64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^35.7.5",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "app.lumalyrics.desktop",
+    "productName": "LumaLyrics",
+    "files": ["src/**/*", "package.json"],
+    "mac": {
+      "category": "public.app-category.music",
+      "target": [{"target":"dmg","arch":["arm64"]},{"target":"zip","arch":["arm64"]}],
+      "identity": null,
+      "hardenedRuntime": false
+    },
+    "dmg": {"title": "LumaLyrics"}
+  }
+}
